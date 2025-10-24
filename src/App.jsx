@@ -11,6 +11,8 @@ export default function App() {
     { name: 'pesoRolo', label: 'Peso do Rolo (g)', default: 1000 },
     { name: 'consumo', label: 'Consumo da Impressora (W)', default: 150 },
     { name: 'kwh', label: 'Valor do kWh (R$)', default: 0.92 },
+    { name: 'valorImpressora', label: 'Valor da Impressora (R$)', default: 4500 },
+    { name: 'vidaUtil', label: 'Vida Útil da Impressora (h)', default: 2000 },
     { name: 'fatiamento', label: 'Tempo de Fatiamento (min)', default: '' },
     { name: 'acabamento', label: 'Tempo de Acabamento (min)', default: '' },
     { name: 'valorHora', label: 'Valor da Hora de Trabalho (R$)', default: '' },
@@ -25,7 +27,7 @@ export default function App() {
 
   const columns = [
     'cliente','nome','material','cor','quantidade','peso','tempo','unidadeTempo',
-    'custoMaterial','custoEnergia','custoTrabalho','custoTotal','precoVenda','margem'
+    'custoMaterial','custoEnergia','custoTrabalho','custoDepreciacao','custoTotal','precoVenda','margem'
   ];
 
   const handleChange = (e) => {
@@ -41,6 +43,8 @@ export default function App() {
     const pesoRolo = parseFloat(form.pesoRolo) || 1000;
     const consumo = parseFloat(form.consumo) || 150;
     const kwh = parseFloat(form.kwh) || 0.92;
+    const valorImpressora = parseFloat(form.valorImpressora) || 4500;
+    const vidaUtil = parseFloat(form.vidaUtil) || 2000;
     const fatiamento = parseFloat(form.fatiamento) || 0;
     const acabamento = parseFloat(form.acabamento) || 0;
     const valorHora = parseFloat(form.valorHora) || 0;
@@ -50,11 +54,12 @@ export default function App() {
     const custoMaterial = (peso * (precoRolo / pesoRolo)) * quantidade;
     const custoEnergia = ((consumo * tempo) / 1000) * kwh * quantidade;
     const custoTrabalho = (((fatiamento + acabamento) / 60) * valorHora) * quantidade;
+    const custoDepreciacao = ((valorImpressora / vidaUtil) * tempo) * quantidade;
 
-    const custoTotal = custoMaterial + custoEnergia + custoTrabalho;
+    const custoTotal = custoMaterial + custoEnergia + custoTrabalho + custoDepreciacao;
     const precoVenda = custoTotal * (1 + margem / 100);
 
-    return { custoMaterial, custoEnergia, custoTrabalho, custoTotal, precoVenda, margem };
+    return { custoMaterial, custoEnergia, custoTrabalho, custoDepreciacao, custoTotal, precoVenda, margem };
   };
 
   const adicionarResultado = (e) => {
@@ -73,6 +78,7 @@ export default function App() {
       custoMaterial: custos.custoMaterial,
       custoEnergia: custos.custoEnergia,
       custoTrabalho: custos.custoTrabalho,
+      custoDepreciacao: custos.custoDepreciacao,
       custoTotal: custos.custoTotal,
       precoVenda: custos.precoVenda,
       margem: custos.margem
@@ -93,7 +99,9 @@ export default function App() {
     const header = columns.join(';');
     const rows = resultados.map(r => columns.map(c => {
       const v = r[c];
-      if (typeof v === 'number') return v.toFixed(2);
+      if (['custoMaterial','custoEnergia','custoTrabalho','custoDepreciacao','custoTotal','precoVenda'].includes(c)) {
+        return v.toFixed(2);
+      }
       return v ?? '';
     }).join(';'));
 
@@ -205,7 +213,7 @@ export default function App() {
                 <tr key={i} className="even:bg-gray-50">
                   {columns.map((col, j) => (
                     <td key={j} className="border px-2 py-1">
-                      {['custoMaterial','custoEnergia','custoTrabalho','custoTotal','precoVenda'].includes(col)
+                      {['custoMaterial','custoEnergia','custoTrabalho','custoDepreciacao','custoTotal','precoVenda'].includes(col)
                         ? formatarMoeda(r[col])
                         : r[col] ?? ''}
                     </td>

@@ -1,0 +1,51 @@
+/* src/index.css */
+/* Tailwind + estilos adicionais para layout limpo e minimalista */
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* Global body styling */
+body {
+  @apply bg-gray-50 font-sans text-gray-800;
+}
+
+/* Inputs e botões padrão */
+input, select, textarea, button {
+  @apply rounded border border-gray-300 p-2 focus:outline-none focus:ring-2 focus:ring-indigo-400;
+}
+
+button {
+  @apply cursor-pointer transition-colors;
+}
+
+/* Tabelas */
+table {
+  @apply w-full border-collapse;
+}
+
+thead {
+  @apply bg-gray-100;
+}
+
+th, td {
+  @apply border px-2 py-1;
+}
+
+tbody tr:nth-child(even) {
+  @apply bg-gray-50;
+}
+
+/* Formulário */
+form input, form select, form textarea {
+  @apply w-full mb-2;
+}
+
+form button {
+  @apply mt-3 bg-indigo-600 text-white py-2 px-4 hover:bg-indigo-700 rounded;
+}
+
+/* Classes personalizadas para cards/containers sem conflito */
+.card {
+  @apply bg-white p-6 rounded-xl shadow-sm;
+}

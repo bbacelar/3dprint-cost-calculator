@@ -26,8 +26,8 @@ export default function App() {
   const [resultados, setResultados] = useState([]);
 
   const columns = [
-    'cliente','nome','material','cor','quantidade','peso','tempo','unidadeTempo',
-    'custoMaterial','custoEnergia','custoTrabalho','custoDepreciacao','custoTotal','precoVenda','margem'
+    'cliente', 'nome', 'material', 'cor', 'quantidade', 'peso', 'tempo', 'unidadeTempo',
+    'custoMaterial', 'custoEnergia', 'custoTrabalho', 'custoDepreciacao', 'custoTotal', 'precoVenda', 'margem'
   ];
 
   const handleChange = (e) => {
@@ -62,6 +62,24 @@ export default function App() {
     return { custoMaterial, custoEnergia, custoTrabalho, custoDepreciacao, custoTotal, precoVenda, margem };
   };
 
+  const columnLabels = {
+    cliente: 'Cliente',
+    nome: 'Nome da Peça',
+    material: 'Material',
+    cor: 'Cor',
+    quantidade: 'Quantidade',
+    peso: 'Peso (g)',
+    tempo: 'Tempo',
+    unidadeTempo: 'Unidade Tempo',
+    custoMaterial: 'Custo Material',
+    custoEnergia: 'Custo Energia',
+    custoTrabalho: 'Custo Trabalho',
+    custoDepreciacao: 'Custo Depreciação',
+    custoTotal: 'Custo Total',
+    precoVenda: 'Preço de Venda',
+    margem: 'Margem (%)'
+  };
+
   const adicionarResultado = (e) => {
     e.preventDefault();
     const custos = calcularCustos();
@@ -85,8 +103,15 @@ export default function App() {
     };
 
     setResultados(prev => [row, ...prev]);
+  };
+
+  const limparFormulario = () => {
     setForm({ cliente: '', nome: '', material: '', tempo: '', ...initialForm });
     setUnidadeTempo('horas');
+  };
+
+  const removerResultado = (index) => {
+    setResultados(prev => prev.filter((_, i) => i !== index));
   };
 
   const formatarMoeda = (valor) => {
@@ -99,7 +124,7 @@ export default function App() {
     const header = columns.join(';');
     const rows = resultados.map(r => columns.map(c => {
       const v = r[c];
-      if (['custoMaterial','custoEnergia','custoTrabalho','custoDepreciacao','custoTotal','precoVenda'].includes(c)) {
+      if (['custoMaterial', 'custoEnergia', 'custoTrabalho', 'custoDepreciacao', 'custoTotal', 'precoVenda'].includes(c)) {
         return v.toFixed(2);
       }
       return v ?? '';
@@ -109,6 +134,28 @@ export default function App() {
     const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
     saveAs(blob, 'custos_impressao_3d.csv');
   };
+
+  // Função para gerar o conteúdo CSV como string
+  const gerarCSVString = (comHeader = true) => {
+    if (resultados.length === 0) return '';
+    const header = columns.join(';');
+    const rows = resultados.map(r => columns.map(c => {
+      const v = r[c];
+      if (['custoMaterial', 'custoEnergia', 'custoTrabalho', 'custoDepreciacao', 'custoTotal', 'precoVenda'].includes(c)) {
+        return v.toFixed(2);
+      }
+      return v ?? '';
+    }).join(';'));
+    return comHeader ? [header, ...rows].join('\n') : rows.join('\n');
+  };
+
+  // Copia o CSV para o clipboard
+  const copiarCSV = (comHeader = true) => {
+    const csv = gerarCSVString(comHeader);
+    if (!csv) return;
+    navigator.clipboard.writeText(csv);
+  };
+
   return (
     <div className="min-h-screen p-4 sm:p-6 bg-gray-50">
       <h1 className="text-2xl font-bold text-center mb-6">Calculadora de Custo de Impressão 3D</h1>
@@ -191,43 +238,76 @@ export default function App() {
             />
           </div>
         ))}
-
-        <button type="submit" className="col-span-full bg-blue-600 text-white py-2 rounded hover:bg-blue-700 transition">
-          Calcular e Adicionar
-        </button>
-      </form>
-
-      {resultados.length > 0 && (
-        <div className="mt-8 bg-white p-4 sm:p-6 rounded-xl shadow overflow-x-auto">
-          <h2 className="text-lg font-semibold mb-4">Resultados</h2>
-          <table className="min-w-full text-sm">
-            <thead className="bg-gray-200">
-              <tr>
-                {columns.map(col => (
-                  <th key={col} className="border px-2 py-1 text-left">{col}</th>
-                ))}
-              </tr>
-            </thead>
-            <tbody>
-              {resultados.map((r, i) => (
-                <tr key={i} className="even:bg-gray-50">
-                  {columns.map((col, j) => (
-                    <td key={j} className="border px-2 py-1">
-                      {['custoMaterial','custoEnergia','custoTrabalho','custoDepreciacao','custoTotal','precoVenda'].includes(col)
-                        ? formatarMoeda(r[col])
-                        : r[col] ?? ''}
-                    </td>
-                  ))}
-                </tr>
-              ))}
-            </tbody>
-          </table>
-
-          <button onClick={gerarCSV} className="mt-4 bg-green-600 text-white px-4 py-2 rounded hover:bg-green-700">
-            Gerar CSV
+        <div className="col-span-full flex gap-2 justify-end">
+          <button type="submit" className="col-span-full bg-blue-600 text-white py-2 rounded hover:bg-blue-700 transition">
+            Calcular e Adicionar
+          </button>
+          <button type="button" onClick={limparFormulario} className="bg-gray-400 text-white py-2 px-4 rounded hover:bg-gray-500 transition">
+            Limpar Formulário
           </button>
         </div>
-      )}
-    </div>
+      </form >
+
+      {
+        resultados.length > 0 && (
+          <div className="mt-8 bg-white p-4 sm:p-6 rounded-xl shadow overflow-x-auto">
+            <h2 className="text-lg font-semibold mb-4">Resultados</h2>
+            <table className="min-w-full text-sm">
+              <thead className="bg-gray-200">
+                <tr>
+                 {columns.map(col => (
+                    <th key={col} className="border px-2 py-1 text-left">
+                      {columnLabels[col] || col}
+                    </th>
+                  ))}
+                  <th className="border px-2 py-1 text-left">Ações</th>
+                </tr>
+              </thead>
+              <tbody>
+                {resultados.map((r, i) => (
+                  <tr key={i} className="even:bg-gray-50">
+                    {columns.map((col, j) => (
+                      <td key={j} className="border px-2 py-1">
+                        {['custoMaterial', 'custoEnergia', 'custoTrabalho', 'custoDepreciacao', 'custoTotal', 'precoVenda'].includes(col)
+                          ? formatarMoeda(r[col])
+                          : r[col] ?? ''}
+                      </td>
+                    ))}
+                    <td className="border px-2 py-1">
+                      <button
+                        onClick={() => removerResultado(i)}
+                        className="bg-red-500 text-white px-2 py-1 rounded hover:bg-red-700"
+                      >
+                        Remover
+                      </button>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+
+            <div className="flex flex-wrap gap-2 mt-4 justify-end">
+              <button onClick={gerarCSV} className="bg-green-600 text-white px-4 py-2 rounded hover:bg-green-700">
+                Salvar CSV
+              </button>
+              <button
+                onClick={() => copiarCSV(true)}
+                className="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700"
+                type="button"
+              >
+                Copiar CSV (com cabeçalho)
+              </button>
+              <button
+                onClick={() => copiarCSV(false)}
+                className="bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600"
+                type="button"
+              >
+                Copiar CSV (sem cabeçalho)
+              </button>
+            </div>
+          </div>
+        )
+      }
+    </div >
   );
 }
